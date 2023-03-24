@@ -111,10 +111,17 @@ class UserControllerTest {
     }
 
     @Test
-    public void shoulUpdateUser() {
+    public void shouldAddNewUser() {
+        controller.create(user);
+
+        assertEquals(user, controller.getUsers().get(user.getId()));
+    }
+
+    @Test
+    public void shoulUpdateExistingUserWhenUserIdExist() {
         controller.create(user);
         User userUpdate = User.builder()
-                .id(1)
+                .id(user.getId())
                 .email("update@test.ru")
                 .login("loginUpdate")
                 .birthday(LocalDate.of(2010, 01, 20))

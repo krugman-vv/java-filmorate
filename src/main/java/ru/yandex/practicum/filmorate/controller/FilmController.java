@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -105,5 +106,9 @@ public class FilmController {
 
     public int setFilmId() {
         return ++counter;
+    }
+
+    public HashMap<Integer, Film> getFilms() {
+        return new HashMap<>(filmsByID);
     }
 }
