@@ -78,7 +78,6 @@ public class UserController {
     public void validateUser(User user) {
         if (user.getEmail().isBlank()) {
             log.error("The email address can't be empty.");
-
             throw new ValidationException("The email address can't be empty.");
         }
         if (!user.getEmail().contains("@")) {
@@ -106,5 +105,9 @@ public class UserController {
 
     public int setUserId() {
         return ++counter;
+    }
+
+    public HashMap<Integer, User> getUsers() {
+        return new HashMap<>(usersById);
     }
 }
