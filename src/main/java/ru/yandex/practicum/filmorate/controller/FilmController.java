@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -19,7 +18,7 @@ public class FilmController {
     private static final int MAX_LENGTH_DESCRIPTION = 200;
     private static final LocalDate MIN_DAY_RELEASE = LocalDate.of(1895, DECEMBER, 28);
     private final Map<Integer, Film> filmsByID = new HashMap<>();
-    private final Map<String, Film> filmsByName = new HashMap<>();
+    private final Set<String> filmsName = new HashSet<>();
 
     @PostMapping
     public Film create(@RequestBody Film film) {
@@ -27,12 +26,12 @@ public class FilmController {
 
         validateFilm(film);
 
-        if (filmsByName.containsKey(film.getName())) {
+        if (filmsName.contains(film.getName())) {
             throw new ValidationException("This movie's name has already been added to the collection.");
         }
 
         film.setId(setFilmId());
-        filmsByName.put(film.getName(), film);
+        filmsName.add(film.getName());
         filmsByID.put(film.getId(), film);
 
         log.info("A new film has been created: {}", film);
@@ -45,23 +44,23 @@ public class FilmController {
 
         validateFilm(film);
 
-        if (!filmsByID.containsKey(film.getId()) && !filmsByName.containsKey(film.getName())) {
+        if (!filmsByID.containsKey(film.getId()) && !filmsName.contains(film.getName())) {
             filmsByID.put(film.getId(), film);
-            filmsByName.put(film.getName(), film);
+            filmsName.add(film.getName());
 
             log.info("A new film has been created: {}", film);
-        } else if (filmsByID.containsKey(film.getId()) && filmsByName.containsKey(film.getName())) {
+        } else if (filmsByID.containsKey(film.getId()) && filmsName.contains(film.getName())) {
             Film filmBeforeUpdate = filmsByID.get(film.getId());
             filmsByID.put(film.getId(), film);
-            filmsByName.put(film.getName(), film);
+            filmsName.add(film.getName());
 
             log.info("The profile of en existing film has been updated.\nBefore: {}\nAfter:{}", filmBeforeUpdate, film);
         } else if (filmsByID.containsKey(film.getId())) {
             String nameBeforeUpdate = filmsByID.get(film.getId()).getName();
-            filmsByName.remove(nameBeforeUpdate);
+            filmsName.remove(nameBeforeUpdate);
 
             filmsByID.put(film.getId(), film);
-            filmsByName.put(film.getName(), film);
+            filmsName.add(film.getName());
 
             log.info("The name of en existing movie has been updated.\nBefore: {}.\nAfter: {}", nameBeforeUpdate, film.getName());
 

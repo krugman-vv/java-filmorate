@@ -6,16 +6,15 @@ import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @RestController
 @Slf4j
 @RequestMapping("/users")
 public class UserController {
-    private final Map<String, User> usersByEmail = new HashMap<>();
     private final Map<Integer, User> usersById = new HashMap<>();
+    private final Set<String> usersEmail = new HashSet<>();
+
     private static int counter = 0;
 
     @PostMapping
@@ -23,13 +22,13 @@ public class UserController {
         log.info("POST request received: {}", user);
         validateUser(user);
 
-        if (usersByEmail.containsKey(user.getEmail())) {
+        if (usersEmail.contains(user.getEmail())) {
             log.error("User with such {} already exists", user.getEmail());
             throw new ValidationException("User with such " + user.getEmail() + " already exists");
         }
 
         user.setId(setUserId());
-        usersByEmail.put(user.getEmail(), user);
+        usersEmail.add(user.getEmail());
         usersById.put(user.getId(), user);
 
         log.info("A new user has been created: {}", user);
@@ -42,22 +41,22 @@ public class UserController {
 
         validateUser(user);
 
-        if (!usersById.containsKey(user.getId()) && !usersByEmail.containsKey(user.getEmail())) {
+        if (!usersById.containsKey(user.getId()) && !usersEmail.contains(user.getEmail())) {
             usersById.put(user.getId(), user);
-            usersByEmail.put(user.getEmail(), user);
+            usersEmail.add(user.getEmail());
             log.info("A new user has been created: {}", user);
-        } else if (usersById.containsKey(user.getId()) && usersByEmail.containsKey(user.getEmail())) {
+        } else if (usersById.containsKey(user.getId()) && usersEmail.contains(user.getEmail())) {
             User userBeforeUpdate = usersById.get(user.getId());
             usersById.put(user.getId(), user);
-            usersByEmail.put(user.getEmail(), user);
+            usersEmail.add(user.getEmail());
 
             log.info("The profile of an existing user has been updated.\nBefore: {}\nAfter: {}", userBeforeUpdate, user);
         } else if (usersById.containsKey(user.getId())) {
             String emailBeforeUpdate = usersById.get(user.getId()).getEmail();
-            usersByEmail.remove(emailBeforeUpdate);
+            usersEmail.remove(emailBeforeUpdate);
 
             usersById.put(user.getId(), user);
-            usersByEmail.put(user.getEmail(), user);
+            usersEmail.add(user.getEmail());
             log.info("The email address of an existing user has been updated.\nBefore: {}\nAfter: {}",
                     emailBeforeUpdate, user.getEmail());
 
@@ -72,7 +71,7 @@ public class UserController {
 
     @GetMapping
     public Collection<User> getAllUsers() {
-        return usersByEmail.values();
+        return usersById.values();
     }
 
     public void validateUser(User user) {
