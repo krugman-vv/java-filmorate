@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
@@ -88,26 +89,6 @@ class FilmControllerTest {
     }
 
     @Test
-    public void shouldThrowExceptionWhenNewMovieHasNameOfExcistingMovie() {
-        controller.create(film);
-        Film newFilm = Film.builder()
-                .name("movie")
-                .description("this is not existing movie")
-                .releaseDate(LocalDate.of(2000, 12, 01))
-                .duration(100)
-                .build();
-
-        Executable executable = () -> controller.create(film);
-
-        ValidationException exception = Assertions.assertThrows(
-                ValidationException.class,
-                executable
-        );
-
-        assertEquals("This movie's name has already been added to the collection.", exception.getMessage());
-    }
-
-    @Test
     public void shouldUpdateExistingMovieWhenIdAndEmailAlreadyExist() {
         controller.create(film);
         Film newFilm = Film.builder()
@@ -124,7 +105,7 @@ class FilmControllerTest {
     }
 
     @Test
-    public void shouldAddNewMovieWhenCallUpdateAndMovieIdNotExistAndMovieNameNotExist() {
+    public void shouldThrowExceptionWhenCallUpdateAndMovieIdNotExistAndMovieNameNotExist() {
         controller.create(film);
         Film newFilm = Film.builder()
                 .id(film.getId() + 1)
@@ -134,10 +115,14 @@ class FilmControllerTest {
                 .duration(100)
                 .build();
 
-        controller.update(newFilm);
+        Executable executable = () -> controller.update(newFilm);
 
-        assertEquals(2, controller.getFilms().size());
-        assertEquals(newFilm, controller.getFilms().get(newFilm.getId()));
+        NotFoundException exception = Assertions.assertThrows(
+                NotFoundException.class,
+                executable
+        );
+
+        assertEquals("Updating is not possible. The requested movie was not found:\n" + newFilm, exception.getMessage());
     }
 
     @Test

@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
@@ -26,10 +27,6 @@ public class FilmController {
 
         validateFilm(film);
 
-        if (filmsName.contains(film.getName())) {
-            throw new ValidationException("This movie's name has already been added to the collection.");
-        }
-
         film.setId(setFilmId());
         filmsName.add(film.getName());
         filmsByID.put(film.getId(), film);
@@ -45,10 +42,8 @@ public class FilmController {
         validateFilm(film);
 
         if (!filmsByID.containsKey(film.getId()) && !filmsName.contains(film.getName())) {
-            filmsByID.put(film.getId(), film);
-            filmsName.add(film.getName());
-
-            log.info("A new film has been created: {}", film);
+            log.error("Updating is not possible. The following movie was not found:\n{}", film);
+            throw new NotFoundException("Updating is not possible. The requested movie was not found:\n" + film);
         } else if (filmsByID.containsKey(film.getId()) && filmsName.contains(film.getName())) {
             Film filmBeforeUpdate = filmsByID.get(film.getId());
             filmsByID.put(film.getId(), film);

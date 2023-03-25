@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
@@ -154,16 +155,21 @@ class UserControllerTest {
     @Test
     public void shouldAddUnknownUserIdAndUnknownUserEmailWhenCallUpdateUser() {
         controller.create(user);
-        User userUpdate = User.builder()
+        User newUser = User.builder()
                 .id(1111)
                 .email("unknown@unknown.ru")
                 .login("loginUpdate")
                 .birthday(LocalDate.of(2010, 01, 20))
                 .build();
 
-        controller.update(userUpdate);
+        Executable executable = () -> controller.update(newUser);
 
-        assertEquals(userUpdate, controller.getUsers().get(userUpdate.getId()));
+        NotFoundException exception = Assertions.assertThrows(
+                NotFoundException.class,
+                executable
+        );
+
+        assertEquals("Updating is not possible. The requested user was not found:\n" + newUser, exception.getMessage());
     }
 
     @Test
