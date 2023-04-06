@@ -7,7 +7,10 @@ import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static java.lang.Integer.compare;
@@ -17,11 +20,10 @@ import static java.time.Month.DECEMBER;
 @Slf4j
 public class InMemoryFilmStorage implements FilmStorage {
     private static long counter = 0;
-//    private static final int MAX_LENGTH_DESCRIPTION = 200;
+    private static final int MAX_LENGTH_DESCRIPTION = 200;
     private static final LocalDate MIN_DAY_RELEASE = LocalDate.of(1895, DECEMBER, 28);
     private final Map<Long, Film> filmsByID = new HashMap<>();
 
-    //    private final Set<String> filmsName = new HashSet<>();
     @Override
     public Film create(Film film) {
         log.info("POST request received: {}", film);
@@ -30,7 +32,6 @@ public class InMemoryFilmStorage implements FilmStorage {
 
         film.setId(setFilmId());
         film.setUsersLikes(new HashSet<>());
-//        filmsName.add(film.getName());
         filmsByID.put(film.getId(), film);
 
         log.info("A new film has been added: {}", film);
@@ -54,34 +55,6 @@ public class InMemoryFilmStorage implements FilmStorage {
         log.info("The movie has been updated: {}", film);
 
         return film;
-/*
-
-        if (!filmsByID.containsKey(film.getId()) && !filmsName.contains(film.getName())) {
-            log.error("Updating is not possible. The following movie was not found:\n{}", film);
-            throw new NotFoundException("Updating is not possible. The requested movie was not found:\n" + film);
-        } else if (filmsByID.containsKey(film.getId()) && filmsName.contains(film.getName())) {
-            Film filmBeforeUpdate = filmsByID.get(film.getId());
-            filmsByID.put(film.getId(), film);
-            filmsName.add(film.getName());
-
-            log.info("The profile of en existing film has been updated.\nBefore: {}\nAfter:{}", filmBeforeUpdate, film);
-        } else if (filmsByID.containsKey(film.getId())) {
-            String nameBeforeUpdate = filmsByID.get(film.getId()).getName();
-            filmsName.remove(nameBeforeUpdate);
-
-            filmsByID.put(film.getId(), film);
-            filmsName.add(film.getName());
-
-            log.info("The name of en existing movie has been updated.\nBefore: {}.\nAfter: {}", nameBeforeUpdate, film.getName());
-
-        } else {
-            log.error("Invalid incoming movie's ID={} during updating an existing movie's name ({})", film.getId(), film.getName());
-
-            throw new ValidationException("Invalid incoming movie's ID during updating an existing movie's name " + film.getName());
-        }
-        return film;
-*/
-
     }
 
     @Override
@@ -188,7 +161,7 @@ public class InMemoryFilmStorage implements FilmStorage {
             throw new ValidationException("The release date of movie can't earlier than the first day " +
                     "of the Lumiere brothers' release of 1895.12.28");
         }
-/*
+
         if (film.getName().isBlank()) {
             log.error("The movie's name can't be empty.");
 
@@ -199,27 +172,14 @@ public class InMemoryFilmStorage implements FilmStorage {
 
             throw new ValidationException("The length of movie description can't be more than 200 characters.");
         }
-        if (film.getReleaseDate().isBefore(MIN_DAY_RELEASE)) {
-            log.error("The release date of movie can't earlier than the first day " +
-                    "of the Lumiere brothers' release of 1895.12.28");
-
-            throw new ValidationException("The release date of movie can't earlier than the first day " +
-                    "of the Lumiere brothers' release of 1895.12.28");
-        }
         if (film.getDuration() <= 0) {
             log.error("The movie's duration should be greater zero.");
 
             throw new ValidationException("The movie's duration should be greater zero.");
         }
-*/
     }
 
     public Long setFilmId() {
         return ++counter;
     }
-
-    public HashMap<Long, Film> getFilms() {
-        return new HashMap<>(filmsByID);
-    }
-
 }
