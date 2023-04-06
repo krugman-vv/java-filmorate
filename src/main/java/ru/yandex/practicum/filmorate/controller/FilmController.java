@@ -1,108 +1,58 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.film.FilmService;
+import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
 
-import java.time.LocalDate;
-import java.util.*;
-
-import static java.time.Month.DECEMBER;
+import java.util.Collection;
+import java.util.List;
 
 @RestController
 @Slf4j
 @RequestMapping("/films")
 public class FilmController {
-    private static int counter = 0;
-    private static final int MAX_LENGTH_DESCRIPTION = 200;
-    private static final LocalDate MIN_DAY_RELEASE = LocalDate.of(1895, DECEMBER, 28);
-    private final Map<Integer, Film> filmsByID = new HashMap<>();
-    private final Set<String> filmsName = new HashSet<>();
+    private final FilmService filmService;
 
-    @PostMapping
-    public Film create(@RequestBody Film film) {
-        log.info("POST request received: {}", film);
-
-        validateFilm(film);
-
-        film.setId(setFilmId());
-        filmsName.add(film.getName());
-        filmsByID.put(film.getId(), film);
-
-        log.info("A new film has been created: {}", film);
-        return film;
-    }
-
-    @PutMapping
-    public Film update(@RequestBody Film film) {
-        log.info("PUT request received: {}", film);
-
-        validateFilm(film);
-
-        if (!filmsByID.containsKey(film.getId()) && !filmsName.contains(film.getName())) {
-            log.error("Updating is not possible. The following movie was not found:\n{}", film);
-            throw new NotFoundException("Updating is not possible. The requested movie was not found:\n" + film);
-        } else if (filmsByID.containsKey(film.getId()) && filmsName.contains(film.getName())) {
-            Film filmBeforeUpdate = filmsByID.get(film.getId());
-            filmsByID.put(film.getId(), film);
-            filmsName.add(film.getName());
-
-            log.info("The profile of en existing film has been updated.\nBefore: {}\nAfter:{}", filmBeforeUpdate, film);
-        } else if (filmsByID.containsKey(film.getId())) {
-            String nameBeforeUpdate = filmsByID.get(film.getId()).getName();
-            filmsName.remove(nameBeforeUpdate);
-
-            filmsByID.put(film.getId(), film);
-            filmsName.add(film.getName());
-
-            log.info("The name of en existing movie has been updated.\nBefore: {}.\nAfter: {}", nameBeforeUpdate, film.getName());
-
-        } else {
-            log.error("Invalid incoming movie's ID={} during updating an existing movie's name ({})", film.getId(), film.getName());
-
-            throw new ValidationException("Invalid incoming movie's ID during updating an existing movie's name " + film.getName());
-        }
-
-        return film;
+    @Autowired
+    public FilmController(FilmService filmService) {
+        this.filmService = filmService;
     }
 
     @GetMapping
     public Collection<Film> getAllFilms() {
-        return filmsByID.values();
+        return filmService.getAllFilms();
     }
 
-    public void validateFilm(Film film) {
-        if (film.getName().isBlank()) {
-            log.error("The movie's name can't be empty.");
-
-            throw new ValidationException("The movie's name can't be empty.");
-        }
-        if (film.getDescription().trim().length() > MAX_LENGTH_DESCRIPTION) {
-            log.error("The length of movie description can't be more than 200 characters.");
-
-            throw new ValidationException("The length of movie description can't be more than 200 characters.");
-        }
-        if (film.getReleaseDate().isBefore(MIN_DAY_RELEASE)) {
-            log.error("The release date of movie can't earlier than the first day " +
-                    "of the Lumiere brothers' release of 1895.12.28");
-
-            throw new ValidationException("The release date of movie can't earlier than the first day " +
-                    "of the Lumiere brothers' release of 1895.12.28");
-        }
-        if (film.getDuration() <= 0) {
-            log.error("The movie's duration should be greater zero.");
-
-            throw new ValidationException("The movie's duration should be greater zero.");
-        }
+    @PostMapping
+    public Film create(@RequestBody Film film) {
+        return filmService.create(film);
     }
 
-    public int setFilmId() {
-        return ++counter;
+    @PutMapping
+    public Film update(@RequestBody Film film) {
+        return filmService.update(film);
     }
 
-    public HashMap<Integer, Film> getFilms() {
-        return new HashMap<>(filmsByID);
+    @GetMapping("/{id}")
+    public Film getFilmById(@PathVariable long id) {
+        return filmService.getFilmById(id);
+    }
+
+    @PutMapping("/{id}/like/{userId}")
+    public Film addUserLike(@PathVariable long id, @PathVariable long userId) {
+        return filmService.addUserLike(id, userId);
+    }
+
+    @DeleteMapping("/{id}/like/{userId}")
+    public Film deleteLike(@PathVariable long id, @PathVariable long userId) {
+        return filmService.deleteLike(id, userId);
+    }
+
+    @GetMapping("/popular")
+    public Collection<Film> getTopFilms(@RequestParam(defaultValue = "10", required = false) int count) {
+        return filmService.getTopFilms(count);
     }
 }
