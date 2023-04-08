@@ -3,7 +3,6 @@ package ru.yandex.practicum.filmorate.storage.user;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.*;
@@ -18,7 +17,7 @@ public class InMemoryUserStorage implements UserStorage {
     @Override
     public User create(User user) {
         log.info("POST request received: {}", user);
-        validateUser(user);
+//        validateUser(user);
 
         user.setId(getUserId());
         user.setFriends(new HashSet<>());
@@ -33,7 +32,7 @@ public class InMemoryUserStorage implements UserStorage {
     public User update(User user) {
         log.info("PUT request received: {}", user);
 
-        validateUser(user);
+//        validateUser(user);
 
         long userId = user.getId();
         checkUserForExist(
@@ -127,7 +126,7 @@ public class InMemoryUserStorage implements UserStorage {
                 .collect(Collectors.toList());
     }
 
-    public void makeFriends(Long userId, Long friendId) {
+    private void makeFriends(Long userId, Long friendId) {
         if (usersById.get(userId).getFriends().contains(friendId)) {
             printErrorMessage(String.format(
                     "The user ID=%s already friends with the user ID=%s", userId, friendId
@@ -141,7 +140,7 @@ public class InMemoryUserStorage implements UserStorage {
         log.info("The user ID={} has become a friend of the user ID={}", userId, friendId);
     }
 
-    public void stopBeingFriends(Long userId, Long friendId) {
+    private void stopBeingFriends(Long userId, Long friendId) {
         usersById.get(userId).getFriends().remove(friendId);
         usersById.get(friendId).getFriends().remove(userId);
 
@@ -149,7 +148,7 @@ public class InMemoryUserStorage implements UserStorage {
         log.info("The user ID={} has been removed from friends of the user ID={}", userId, friendId);
     }
 
-    public void checkUserForExist(List<Long> users, String message) {
+    private void checkUserForExist(List<Long> users, String message) {
         for (Long id : users) {
             if (!usersById.containsKey(id)) {
                 printErrorMessage(message + id);
@@ -157,24 +156,12 @@ public class InMemoryUserStorage implements UserStorage {
         }
     }
 
-    public void printErrorMessage(String message) {
+    private void printErrorMessage(String message) {
         log.error(message);
         throw new NotFoundException(message);
     }
 
-    public void validateUser(User user) {
-        if (user.getLogin().contains(" ")) {
-            log.error("The user's login can't contain the space.");
-            throw new ValidationException("The user's login can't contain the space.");
-        }
-        if (user.getName() == null || user.getName().isBlank()) {
-            user.setName(user.getLogin());
-            log.info("User with id ={} has empty name. The name is set equal login: {}",
-                    user.getId(), user.getLogin());
-        }
-    }
-
-    public Long getUserId() {
+    private Long getUserId() {
         return ++counter;
     }
 }

@@ -1,26 +1,28 @@
 package ru.yandex.practicum.filmorate.service.user;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.Collection;
 
 @Service
+@Slf4j
+@RequiredArgsConstructor
 public class UserService {
     private final UserStorage userStorage;
 
-    @Autowired
-    public UserService(UserStorage userStorage) {
-        this.userStorage = userStorage;
-    }
-
     public User create(User user) {
+        validateUser(user);
         return userStorage.create(user);
     }
 
     public User update(User user) {
+        validateUser(user);
         return userStorage.update(user);
     }
 
@@ -50,5 +52,17 @@ public class UserService {
 
     public Collection<User> getMutualFriends(long firstUserId, long secondUserId) {
         return userStorage.getMutualFriends(firstUserId, secondUserId);
+    }
+
+    private void validateUser(User user) {
+        if (user.getLogin().contains(" ")) {
+            log.error("The user's login can't contain the space.");
+            throw new ValidationException("The user's login can't contain the space.");
+        }
+        if (user.getName() == null || user.getName().isBlank()) {
+            user.setName(user.getLogin());
+            log.info("User with id ={} has empty name. The name is set equal login: {}",
+                    user.getId(), user.getLogin());
+        }
     }
 }

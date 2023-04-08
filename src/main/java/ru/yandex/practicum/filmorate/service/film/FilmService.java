@@ -1,29 +1,33 @@
 package ru.yandex.practicum.filmorate.service.film;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.user.UserService;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
+import java.time.LocalDate;
 import java.util.Collection;
 
+import static java.time.Month.DECEMBER;
+
 @Service
+@Slf4j
+@RequiredArgsConstructor
 public class FilmService {
     private final FilmStorage filmStorage;
-    private final UserStorage userStorage;
-
-    @Autowired
-    public FilmService(FilmStorage filmStorage, UserStorage userStorage) {
-        this.filmStorage = filmStorage;
-        this.userStorage = userStorage;
-    }
+    private final UserService userService;
+    private static final LocalDate MIN_DAY_RELEASE = LocalDate.of(1895, DECEMBER, 28);
 
     public Film create(Film film) {
+        validateFilm(film);
         return filmStorage.create(film);
     }
 
     public Film update(Film film) {
+        validateFilm(film);
         return filmStorage.update(film);
     }
 
@@ -39,15 +43,27 @@ public class FilmService {
         return filmStorage.getFilmById(id);
     }
 
-    public Film addUserLike(long filmId, long userId) {
-        return filmStorage.addUserLike(filmId, userId);
+    public Film addLike(long filmId, long userId) {
+        userService.getUserById(userId);
+        return filmStorage.addLike(filmId, userId);
     }
 
     public Film deleteLike(long filmId, long userId) {
+        userService.getUserById(userId);
         return filmStorage.deleteLike(filmId, userId);
     }
 
     public Collection<Film> getTopFilms(int count) {
         return filmStorage.getTopFilms(count);
+    }
+
+    private void validateFilm(Film film) {
+        if (film.getReleaseDate().isBefore(MIN_DAY_RELEASE)) {
+            log.error("The release date of movie can't earlier than the first day " +
+                    "of the Lumiere brothers' release of 1895.12.28");
+
+            throw new ValidationException("The release date of movie can't earlier than the first day " +
+                    "of the Lumiere brothers' release of 1895.12.28");
+        }
     }
 }
