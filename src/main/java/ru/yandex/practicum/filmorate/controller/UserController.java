@@ -23,11 +23,13 @@ public class UserController {
 
     @PostMapping
     public User create(@Valid @RequestBody User user) {
+        log.info("POST request received: {}", user);
         return userService.create(user);
     }
 
     @PutMapping
     public User update(@Valid @RequestBody User user) {
+        log.info("PUT request received: {}", user);
         return userService.update(user);
     }
 

@@ -16,9 +16,6 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public User create(User user) {
-        log.info("POST request received: {}", user);
-//        validateUser(user);
-
         user.setId(getUserId());
         user.setFriends(new HashSet<>());
         usersById.put(user.getId(), user);
@@ -30,10 +27,6 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public User update(User user) {
-        log.info("PUT request received: {}", user);
-
-//        validateUser(user);
-
         long userId = user.getId();
         checkUserForExist(
                 List.of(userId),

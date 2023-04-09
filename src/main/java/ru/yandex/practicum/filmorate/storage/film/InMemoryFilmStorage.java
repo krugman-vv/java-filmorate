@@ -18,8 +18,6 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     @Override
     public Film create(Film film) {
-        log.info("POST request received: {}", film);
-
         film.setId(setFilmId());
         film.setLikes(new HashSet<>());
         filmsByID.put(film.getId(), film);
@@ -30,8 +28,6 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     @Override
     public Film update(Film film) {
-        log.info("PUT request received: {}", film);
-
         long filmId = film.getId();
         checkFilmForExist(
                 filmId,

@@ -22,11 +22,13 @@ public class FilmController {
 
     @PostMapping
     public Film create(@RequestBody Film film) {
+        log.info("POST request received: {}", film);
         return filmService.create(film);
     }
 
     @PutMapping
     public Film update(@RequestBody Film film) {
+        log.info("PUT request received: {}", film);
         return filmService.update(film);
     }
 
