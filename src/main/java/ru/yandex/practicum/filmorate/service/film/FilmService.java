@@ -67,7 +67,7 @@ public class FilmService {
                     "of the Lumiere brothers' release of 1895.12.28");
         }
 
-        if (film.getName().isBlank()) {
+ /*       if (film.getName().isBlank()) {
             log.error("The movie's name can't be empty.");
 
             throw new ValidationException("The movie's name can't be empty.");
@@ -81,6 +81,6 @@ public class FilmService {
             log.error("The movie's duration should be greater zero.");
 
             throw new ValidationException("The movie's duration should be greater zero.");
-        }
+        }*/
     }
 }
