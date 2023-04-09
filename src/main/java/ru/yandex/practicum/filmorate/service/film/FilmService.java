@@ -19,7 +19,6 @@ import static java.time.Month.DECEMBER;
 public class FilmService {
     private final FilmStorage filmStorage;
     private final UserService userService;
-    private static final int MAX_LENGTH_DESCRIPTION = 200;
     private static final LocalDate MIN_DAY_RELEASE = LocalDate.of(1895, DECEMBER, 28);
 
     public Film create(Film film) {
@@ -66,21 +65,5 @@ public class FilmService {
             throw new ValidationException("The release date of movie can't earlier than the first day " +
                     "of the Lumiere brothers' release of 1895.12.28");
         }
-
- /*       if (film.getName().isBlank()) {
-            log.error("The movie's name can't be empty.");
-
-            throw new ValidationException("The movie's name can't be empty.");
-        }
-        if (film.getDescription().trim().length() > MAX_LENGTH_DESCRIPTION) {
-            log.error("The length of movie description can't be more than 200 characters.");
-
-            throw new ValidationException("The length of movie description can't be more than 200 characters.");
-        }
-        if (film.getDuration() <= 0) {
-            log.error("The movie's duration should be greater zero.");
-
-            throw new ValidationException("The movie's duration should be greater zero.");
-        }*/
     }
 }
