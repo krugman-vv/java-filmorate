@@ -1,112 +1,60 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.user.UserService;
 
-import java.time.LocalDate;
-import java.util.*;
+import javax.validation.Valid;
+import java.util.Collection;
 
 @RestController
 @Slf4j
+@RequiredArgsConstructor
 @RequestMapping("/users")
 public class UserController {
-    private final Map<Integer, User> usersById = new HashMap<>();
-    private final Set<String> usersEmail = new HashSet<>();
-
-    private static int counter = 0;
-
-    @PostMapping
-    public User create(@RequestBody User user) {
-        log.info("POST request received: {}", user);
-        validateUser(user);
-
-        if (usersEmail.contains(user.getEmail())) {
-            log.error("User with such {} already exists", user.getEmail());
-            throw new ValidationException("User with such " + user.getEmail() + " already exists");
-        }
-
-        user.setId(setUserId());
-        usersEmail.add(user.getEmail());
-        usersById.put(user.getId(), user);
-
-        log.info("A new user has been created: {}", user);
-        return user;
-    }
-
-    @PutMapping
-    public User update(@RequestBody User user) {
-        log.info("PUT request received: {}", user);
-
-        validateUser(user);
-
-        if (!usersById.containsKey(user.getId()) && !usersEmail.contains(user.getEmail())) {
-            log.info("A new user has been created: {}", user);
-            throw new NotFoundException("Updating is not possible. The requested user was not found:\n" + user);
-        } else if (usersById.containsKey(user.getId()) && usersEmail.contains(user.getEmail())) {
-            User userBeforeUpdate = usersById.get(user.getId());
-            usersById.put(user.getId(), user);
-            usersEmail.add(user.getEmail());
-
-            log.info("The profile of an existing user has been updated.\nBefore: {}\nAfter: {}", userBeforeUpdate, user);
-        } else if (usersById.containsKey(user.getId())) {
-            String emailBeforeUpdate = usersById.get(user.getId()).getEmail();
-            usersEmail.remove(emailBeforeUpdate);
-
-            usersById.put(user.getId(), user);
-            usersEmail.add(user.getEmail());
-            log.info("The email address of an existing user has been updated.\nBefore: {}\nAfter: {}",
-                    emailBeforeUpdate, user.getEmail());
-
-        } else {
-            log.error("Invalid incoming user's ID={} during updating an existing user ({}).", user.getId(), user.getEmail());
-
-            throw new ValidationException("Invalid incoming user's ID during updating an existing user:\n" + user);
-        }
-
-        return user;
-    }
+    private final UserService userService;
 
     @GetMapping
     public Collection<User> getAllUsers() {
-        return usersById.values();
+        return userService.getAllUsers();
     }
 
-    public void validateUser(User user) {
-        if (user.getEmail().isBlank()) {
-            log.error("The email address can't be empty.");
-            throw new ValidationException("The email address can't be empty.");
-        }
-        if (!user.getEmail().contains("@")) {
-            log.error("The email address must contain the symbol \"@\"");
-            throw new ValidationException("The email address must contain the symbol \"@\"");
-        }
-        if (user.getLogin().isBlank()) {
-            log.error("The user's login can't be empty");
-            throw new ValidationException("The user's login can't be empty");
-        }
-        if (user.getLogin().contains(" ")) {
-            log.error("The user's login can't contain the space.");
-            throw new ValidationException("The user's login can't contain the space.");
-        }
-        if (user.getBirthday().isAfter(LocalDate.now())) {
-            log.error("The user's birthdate can't be in the future.");
-            throw new ValidationException("The user's birthdate can't be in the future.");
-        }
-        if (user.getName() == null || user.getName().isBlank()) {
-            user.setName(user.getLogin());
-            log.info("User with id ={} has empty name. The name is set equal login: {}",
-                    user.getId(), user.getLogin());
-        }
+    @PostMapping
+    public User create(@Valid @RequestBody User user) {
+        log.info("POST request received: {}", user);
+        return userService.create(user);
     }
 
-    public int setUserId() {
-        return ++counter;
+    @PutMapping
+    public User update(@Valid @RequestBody User user) {
+        log.info("PUT request received: {}", user);
+        return userService.update(user);
     }
 
-    public HashMap<Integer, User> getUsers() {
-        return new HashMap<>(usersById);
+    @GetMapping("/{id}")
+    public User getUserById(@PathVariable long id) {
+        return userService.getUserById(id);
+    }
+
+    @PutMapping("/{id}/friends/{friendId}")
+    public User addToFriend(@PathVariable long id, @PathVariable long friendId) {
+        return userService.addToFriend(id, friendId);
+    }
+
+    @DeleteMapping("/{id}/friends/{friendId}")
+    public User deleteFromFriends(@PathVariable long id, @PathVariable long friendId) {
+        return userService.deleteFromFriends(id, friendId);
+    }
+
+    @GetMapping("/{id}/friends")
+    public Collection<User> getAllUserFriends(@PathVariable long id) {
+        return userService.getAllUserFriends(id);
+    }
+
+    @GetMapping("/{id}/friends/common/{otherId}")
+    public Collection<User> getMutualFriends(@PathVariable long id, @PathVariable long otherId) {
+        return userService.getMutualFriends(id, otherId);
     }
 }
